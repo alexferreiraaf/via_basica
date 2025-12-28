@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store-context';
 import { Button } from './ui/button';
-import { ShoppingBag, Settings, User as UserIcon, LogOut } from 'lucide-react';
+import { ShoppingBag, Settings, User as UserIcon, LogOut, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { useEffect, useState } from 'react';
@@ -101,6 +101,11 @@ export function Header() {
                             </p>
                         </div>
                         </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => router.push('/favorites')}>
+                          <Heart className="mr-2 h-4 w-4" />
+                          <span>Meus Favoritos</span>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
