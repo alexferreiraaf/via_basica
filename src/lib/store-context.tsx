@@ -48,7 +48,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useLocalStorage<Product[]>('products', INITIAL_PRODUCTS);
   const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
   const [storeConfig, setStoreConfig] = useLocalStorage<StoreConfig>('storeConfig', {
-    name: "Livraria VB",
+    name: "Via Básica",
     phone: "14996295234",
     whatsappMessage: "Olá! Gostaria de fazer o seguinte pedido:"
   });
