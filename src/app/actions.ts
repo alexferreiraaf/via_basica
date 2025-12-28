@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { generateProductImage } from '@/ai/flows/generate-product-image';
-import { placeholderImages } from './lib/placeholder-images';
+import { placeholderImages } from '@/lib/placeholder-images';
 
 const ProductSchema = z.object({
   id: z.coerce.number(),
