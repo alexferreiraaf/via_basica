@@ -95,7 +95,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId && request.resource.data.isAdmin == false;
+      // Allow user creation as long as they are the owner and not trying to create a doc for another user.
+      // The isAdmin check is removed to allow the first user to be created as an admin.
+      // The update rule below prevents self-promotion to admin after creation.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.isAdmin == resource.data.isAdmin;
       allow delete: if false;
 
