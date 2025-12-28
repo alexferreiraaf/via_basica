@@ -5,9 +5,21 @@ import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 
+const APP_NAME = "Gospel Viva Store";
+const APP_DESCRIPTION = "Literatura que edifica sua vida.";
+
 export const metadata: Metadata = {
-  title: 'Gospel Viva Store',
-  description: 'Literatura que edifica sua vida.',
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
