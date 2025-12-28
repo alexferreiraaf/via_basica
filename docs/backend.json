@@ -1,0 +1,290 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Gospel Viva Store application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Indicates if the user has administrative privileges."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "isAdmin"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents an order placed by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "Date when the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total amount of the order."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the order (e.g., pending, processing, shipped, delivered)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "orderDate",
+        "totalAmount",
+        "status"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents an item within an order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to Order. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Quantity of the product in the order item."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the product at the time of the order."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "price"
+      ]
+    },
+    "FavoriteProduct": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FavoriteProduct",
+      "type": "object",
+      "description": "Represents a product that a user has marked as a favorite.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the FavoriteProduct entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N FavoriteProduct)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N FavoriteProduct)"
+        },
+        "addedDate": {
+          "type": "string",
+          "description": "Date when the product was added to the user's favorites.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "productId",
+        "addedDate"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product in the store.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the product."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the product."
+        },
+        "image": {
+          "type": "string",
+          "description": "URL of the product image.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "price",
+        "category",
+        "description",
+        "image"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user information. Includes the 'isAdmin' field for role-based authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores order information for a specific user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores order item information for a specific order of a user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier of the order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/favoriteProducts/{favoriteProductId}",
+        "definition": {
+          "entityName": "FavoriteProduct",
+          "schema": {
+            "$ref": "#/backend/entities/FavoriteProduct"
+          },
+          "description": "Stores favorite products for a specific user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "favoriteProductId",
+              "description": "The unique identifier of the favorite product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier of the product."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the Gospel Viva Store application, focusing on product catalog, shopping cart functionality, admin product management, and store configuration. The structure prioritizes authorization independence, clarity, and scalability.\n\n**Authorization Independence:**\n\n*   **Users:** Administrative privileges (`isAdmin`) are stored directly within the user document in the `/users/{userId}` collection. This eliminates the need for `get()` calls in security rules to check admin status, ensuring authorization independence.\n*   **Orders, OrderItems, and FavoriteProducts:**  These are modeled as subcollections under `/users/{userId}`. This structure inherently ties these entities to a specific user, and security rules can easily enforce that only the user can access their own data without needing to check parent document properties.\n\n**Structural Segregation and QAPs (Rules are not Filters):**\n\n*   The segregation of user-specific data (orders, favorites) under `/users/{userId}` enables secure `list` operations. Security rules can simply check `request.auth.uid == userId` to ensure a user can only list their own orders or favorite products.\n\n**Access Modeling:**\n\n*   **Private Data:** The `/users/{userId}` collection follows path-based ownership, making user data private by default.\n*   **Hierarchical Paths for User-Owned Data:**  Orders, OrderItems, and FavoriteProducts are modeled as subcollections under the user, reinforcing the `User 1:N Entity` relationship.\n\nThis structure adheres to the core design principles by:\n\n*   Eliminating hierarchical authorization dependencies via denormalization of the `isAdmin` flag within user documents and leveraging path-based ownership.\n*   Providing clarity in authorization intent through explicit path structures (e.g., `/users/{userId}/orders/{orderId}`).\n*   Avoiding custom claims by storing the admin role directly in the user document (DBAC).\n*   Enabling secure `list` operations by segregating data based on user ownership (QAPs)."
+  }
+}

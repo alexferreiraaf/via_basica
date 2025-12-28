@@ -1,0 +1,164 @@
+/**
+ * Core Philosophy: This ruleset enforces a dual security model. First, a strict user-ownership model for all personal
+ * data (profiles, orders, favorites), ensuring users can only access their own information. Second, a role-based
+ * access control (RBAC) model for administrative functions, where users with an `isAdmin` flag have exclusive write
+ * access to the global product catalog.
+ *
+ * Data Structure: User-specific data, including `orders`, `orderItems`, and `favoriteProducts`, is nested within a
+ * `/users/{userId}` document tree. This path-based ownership simplifies security. A top-level `/products` collection
+ * stores globally accessible product data.
+ *
+ * Key Security Decisions:
+ * - User Enumeration is Disabled: Listing the top-level `/users` collection is forbidden to protect user privacy.
+ * - Admin Privileges: Administrative access is determined by a denormalized `isAdmin` boolean field on each user's
+ *   document. This avoids complex lookups and allows admins to manage the `/products` collection. Admins do not have
+ *   access to other users' private data.
+ * - Public Product Catalog: The `/products` collection is publicly readable by anyone (including unauthenticated users)
+ *   to allow browsing the store, but only writable by administrators.
+ * - User Self-Management: Users can create their own profile but cannot assign themselves the admin role or delete their account directly through the API.
+ *
+ * Denormalization for Authorization: The `isAdmin` flag is denormalized onto each user's document in `/users/{userId}`.
+ * This allows a single, efficient `get()` call within the `isAdmin()` helper function to check the requesting user's role,
+ * making rules for the `/products` collection simple and performant.
+ *
+ * Structural Segregation: Private user data (e.g., `/users/{userId}/orders`) is structurally separated from public data
+ * (`/products`). This separation is critical for writing secure and efficient list rules, preventing any possibility of
+ * private data being exposed in public queries.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Verifies ownership for an existing resource. Used for safe updates and deletes.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Checks if the requesting user has administrative privileges by reading their
+     * own user document. This is an efficient way to implement role-based access.
+     */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    /**
+     * Validates that the user ID in the document data matches the user ID in the path.
+     * This ensures relational integrity between a document and its owner.
+     */
+    function newDocHasCorrectUserId(userId) {
+      return request.resource.data.userId == userId;
+    }
+    
+    /**
+     * Validates that the user ID field cannot be changed after creation.
+     */
+    function userIdIsImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Manages user profiles. Users can create and manage their own profile.
+     * @path /users/{userId}
+     * @allow (get) An authenticated user reads their own document: `auth.uid == 'user_abc'`, `get /users/user_abc`.
+     * @deny (list) Any user attempts to list all users: `get /users`.
+     * @deny (create) A user tries to create a profile for someone else: `auth.uid == 'user_abc'`, `create /users/user_xyz`.
+     * @deny (update) A user tries to make themselves an admin: `auth.uid == 'user_abc'`, `update /users/user_abc` with `isAdmin: true`.
+     * @principle Restricts access to a user's own data tree and prevents privilege escalation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId && request.resource.data.isAdmin == false;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.isAdmin == resource.data.isAdmin;
+      allow delete: if false;
+
+      /**
+       * @description Manages a user's orders. Only the user can view or manage their orders.
+       * @path /users/{userId}/orders/{orderId}
+       * @allow (create) An authenticated user creates an order for themselves: `auth.uid == 'user_abc'`, `create /users/user_abc/orders/order_123`.
+       * @deny (get) An authenticated user tries to read another user's order: `auth.uid == 'user_abc'`, `get /users/user_xyz/orders/order_456`.
+       * @principle Enforces document ownership within a user-specific subcollection.
+       */
+      match /orders/{orderId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && newDocHasCorrectUserId(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Manages items within an order. Access is inherited from the parent order.
+         * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
+         * @allow (list) A user lists the items in their own order: `auth.uid == 'user_abc'`, `get /users/user_abc/orders/order_123/orderItems`.
+         * @deny (get) A user tries to view an item in someone else's order: `auth.uid == 'user_abc'`, `get /users/user_xyz/orders/order_456/orderItems/item_789`.
+         * @principle Enforces hierarchical data ownership.
+         */
+        match /orderItems/{orderItemId} {
+          allow get: if isOwner(userId);
+          allow list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.orderId == orderId;
+          allow update: if isExistingOwner(userId) && request.resource.data.orderId == resource.data.orderId;
+          allow delete: if isExistingOwner(userId);
+        }
+      }
+
+      /**
+       * @description Manages a user's favorite products. Only the user can view or modify their favorites.
+       * @path /users/{userId}/favoriteProducts/{favoriteProductId}
+       * @allow (create) An authenticated user adds a favorite product: `auth.uid == 'user_abc'`, `create /users/user_abc/favoriteProducts/fav_123`.
+       * @deny (delete) A user tries to delete another user's favorite: `auth.uid == 'user_abc'`, `delete /users/user_xyz/favoriteProducts/fav_456`.
+       * @principle Enforces document ownership for a user's personal list data.
+       */
+      match /favoriteProducts/{favoriteProductId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && newDocHasCorrectUserId(userId);
+        allow update: if isExistingOwner(userId) && userIdIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Stores the public product catalog. Anyone can read products, but only admins can manage them.
+     * @path /products/{productId}
+     * @allow (list) Any anonymous user lists all products: `get /products`.
+     * @allow (create) An admin user adds a new product: `auth.uid == 'admin_user'`, `create /products/prod_123`.
+     * @deny (create) A regular non-admin user tries to add a product: `auth.uid == 'user_abc'`, `create /products/prod_456`.
+     * @deny (delete) A regular user tries to delete a product: `auth.uid == 'user_abc'`, `delete /products/prod_123`.
+     * @principle Provides public read access while restricting writes to authorized admin roles.
+     */
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+  }
+}
