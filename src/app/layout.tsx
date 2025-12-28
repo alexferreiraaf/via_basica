@@ -5,7 +5,7 @@ import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 
-const APP_NAME = "Gospel Viva Store";
+const APP_NAME = "Livraria Via Básica";
 const APP_DESCRIPTION = "Literatura que edifica sua vida.";
 
 export const metadata: Metadata = {
