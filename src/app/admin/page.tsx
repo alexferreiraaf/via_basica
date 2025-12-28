@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useStore } from '@/lib/store-context';
-import type { Product } from '@/lib/types';
+import type { Product, UserProfile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Plus, Settings, Trash2, X, Share2 } from 'lucide-react';
+import { ChevronLeft, Plus, Settings, Trash2, X, Share2, Users, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,44 @@ import { ProductForm } from '@/components/admin/product-form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+
+function ClientList() {
+  const firestore = useFirestore();
+  const usersCollectionRef = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'users') : null),
+    [firestore]
+  );
+  const { data: users, isLoading } = useCollection<UserProfile>(usersCollectionRef);
+
+  return (
+    <Card className="md:col-span-1">
+      <CardHeader>
+        <CardTitle className="font-headline text-primary mb-2 flex items-center gap-2">
+          <Users size={20} /> Clientes Cadastrados
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading && <div className="flex justify-center items-center p-4"><Loader2 className="animate-spin" /></div>}
+        {!isLoading && (!users || users.length === 0) && (
+            <p className="text-sm text-gray-500">Nenhum cliente cadastrado ainda.</p>
+        )}
+        {users && users.length > 0 && (
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {users.map(user => (
+              <div key={user.id} className="text-sm p-2 rounded-md bg-gray-50 flex justify-between items-center">
+                <span>{user.email}</span>
+                {user.isAdmin && <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Admin</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 
 export default function AdminView() {
   const router = useRouter();
@@ -80,35 +118,38 @@ export default function AdminView() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-        <Card className="bg-blue-50/50 md:col-span-1 h-fit sticky top-20">
-          <CardHeader>
-            <CardTitle className="font-headline text-primary mb-2 flex items-center gap-2">
-              <Settings size={20} /> Configurações
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="block text-xs font-bold text-blue-800 uppercase mb-1">Nome da Loja</Label>
-              <Input 
-                type="text" 
-                value={storeConfig.name}
-                onChange={(e) => setStoreConfig({...storeConfig, name: e.target.value})}
-                className="w-full p-2 rounded-lg border-blue-200 border bg-white focus:ring-2 focus:ring-primary/50 outline-none"
-              />
-            </div>
-            <div>
-              <Label className="block text-xs font-bold text-blue-800 uppercase mb-1">WhatsApp (com DDD)</Label>
-              <Input 
-                type="text" 
-                value={storeConfig.phone}
-                onChange={(e) => setStoreConfig({...storeConfig, phone: e.target.value})}
-                className="w-full p-2 rounded-lg border-blue-200 border bg-white focus:ring-2 focus:ring-primary/50 outline-none"
-                placeholder="5511999999999"
-              />
-              <p className="text-xs text-blue-600 mt-1">Apenas números, com código do país (55) e DDD.</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="md:col-span-1 space-y-6 h-fit sticky top-20">
+          <Card className="bg-blue-50/50">
+            <CardHeader>
+              <CardTitle className="font-headline text-primary mb-2 flex items-center gap-2">
+                <Settings size={20} /> Configurações
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="block text-xs font-bold text-blue-800 uppercase mb-1">Nome da Loja</Label>
+                <Input 
+                  type="text" 
+                  value={storeConfig.name}
+                  onChange={(e) => setStoreConfig({...storeConfig, name: e.target.value})}
+                  className="w-full p-2 rounded-lg border-blue-200 border bg-white focus:ring-2 focus:ring-primary/50 outline-none"
+                />
+              </div>
+              <div>
+                <Label className="block text-xs font-bold text-blue-800 uppercase mb-1">WhatsApp (com DDD)</Label>
+                <Input 
+                  type="text" 
+                  value={storeConfig.phone}
+                  onChange={(e) => setStoreConfig({...storeConfig, phone: e.target.value})}
+                  className="w-full p-2 rounded-lg border-blue-200 border bg-white focus:ring-2 focus:ring-primary/50 outline-none"
+                  placeholder="5511999999999"
+                />
+                <p className="text-xs text-blue-600 mt-1">Apenas números, com código do país (55) e DDD.</p>
+              </div>
+            </CardContent>
+          </Card>
+          <ClientList />
+        </div>
 
         <div className="md:col-span-2">
           <div className="flex justify-between items-center mb-4">

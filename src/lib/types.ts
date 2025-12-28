@@ -16,3 +16,11 @@ export interface StoreConfig {
   phone: string;
   whatsappMessage: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  isAdmin: boolean;
+}
