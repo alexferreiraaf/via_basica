@@ -43,6 +43,8 @@ export function ProductForm({ product, onSave }: ProductFormProps) {
   const [state, dispatch] = useFormState(saveProductAction, initialState);
   const { toast } = useToast();
 
+  const uniqueId = product?.id || Date.now();
+
   useEffect(() => {
     if (state.success && state.product) {
       toast({
@@ -63,7 +65,7 @@ export function ProductForm({ product, onSave }: ProductFormProps) {
     <>
       <CardTitle className="font-headline mb-4">{product ? 'Editar Produto' : 'Novo Produto'}</CardTitle>
       <form action={dispatch} className="space-y-4">
-        <input type="hidden" name="id" value={product?.id || Date.now()} />
+        <input type="hidden" name="id" value={uniqueId} />
         <div>
           <Label htmlFor="title" className="text-sm font-medium text-gray-700">Título do Livro/Produto</Label>
           <Input id="title" name="title" required defaultValue={product?.title} className="mt-1" />
