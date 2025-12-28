@@ -50,12 +50,7 @@ export function initiateEmailSignUp(
     });
 }
 
-/** Initiate email/password sign-in (non-blocking). */
-export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password)
-    .catch((error) => {
-        // Handle Auth sign-in errors (e.g., wrong password)
-        console.error("Error during sign-in:", error);
-        // You could emit a different kind of global error here for the UI
-    });
+/** Initiate email/password sign-in. Returns a promise that resolves on success or rejects with an error. */
+export async function initiateEmailSignIn(authInstance: Auth, email: string, password: string): Promise<void> {
+  await signInWithEmailAndPassword(authInstance, email, password);
 }

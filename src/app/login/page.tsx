@@ -22,6 +22,7 @@ import {
 } from '@/firebase/auth/email-password';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   email: z.string().email('Email inválido.'),
@@ -33,7 +34,6 @@ const formSchema = z.object({
 type UserFormValue = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const auth = useAuth();
   const firestore = useFirestore();
   const { user } = useUser();
@@ -53,18 +53,29 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const handleSignIn = (data: UserFormValue) => {
-    setIsSubmitting(true);
-    initiateEmailSignIn(auth, data.email, data.password);
-    // The onAuthStateChanged listener will handle redirects/UI changes.
-    // We can add a timeout to reset the submitting state in case of errors.
-    setTimeout(() => setIsSubmitting(false), 5000);
+  const handleSignIn = async (data: UserFormValue) => {
+    try {
+      await initiateEmailSignIn(auth, data.email, data.password);
+      // onAuthStateChanged will handle the redirect
+    } catch (error) {
+      if (error instanceof FirebaseError && error.code === 'auth/invalid-credential') {
+        form.setError('root', {
+          type: 'manual',
+          message: 'Email ou senha inválidos. Por favor, tente novamente.',
+        });
+      } else {
+        form.setError('root', {
+          type: 'manual',
+          message: 'Ocorreu um erro. Tente novamente mais tarde.',
+        });
+        console.error("Sign-in error:", error);
+      }
+    }
   };
 
   const handleSignUp = (data: UserFormValue) => {
-    setIsSubmitting(true);
+    // This part remains non-blocking as it involves multiple steps
     initiateEmailSignUp(auth, firestore, data.email, data.password);
-    setTimeout(() => setIsSubmitting(false), 5000);
   };
 
   return (
@@ -81,6 +92,11 @@ export default function LoginPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSignIn)} className="space-y-4">
+              {form.formState.errors.root && (
+                <div className="text-sm font-medium text-destructive bg-destructive/10 p-3 rounded-md">
+                  {form.formState.errors.root.message}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="email"
@@ -119,7 +135,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isSubmitting}
+                  disabled={form.formState.isSubmitting}
                 >
                   <LogIn size={16} /> Entrar
                 </Button>
@@ -128,7 +144,7 @@ export default function LoginPage() {
                   variant="outline"
                   className="w-full"
                   onClick={form.handleSubmit(handleSignUp)}
-                  disabled={isSubmitting}
+                  disabled={form.formState.isSubmitting}
                 >
                   Criar Conta
                 </Button>
