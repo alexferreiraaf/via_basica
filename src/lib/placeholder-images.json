@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "biblia-nvi",
+      "description": "Cover for the NVI Study Bible",
+      "imageUrl": "https://images.unsplash.com/photo-1640726820205-0de40309c9e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxiaWJsZSUyMGJvb2t8ZW58MHx8fHwxNzY2ODk3NzgxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bible book"
+    },
+    {
+      "id": "poder-oracao",
+      "description": "Cover for The Power of Prayer book",
+      "imageUrl": "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxib29rJTIwY292ZXJ8ZW58MHx8fHwxNzY2ODI0MDk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "book cover"
+    },
+    {
+      "id": "kit-infantil",
+      "description": "Cover for Children's Bible Story Kit",
+      "imageUrl": "https://images.unsplash.com/photo-1550376026-33cbee34f79e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxraWRzJTIwYm9va3xlbnwwfHx8fDE3NjY4Mzk1MjB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "kids book"
+    },
+    {
+      "id": "harpa-crista",
+      "description": "Cover for the Christian Harp hymnal",
+      "imageUrl": "https://images.unsplash.com/photo-1525725125604-4c2493fe9ca6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8aHltbmFsJTIwYm9va3xlbnwwfHx8fDE3NjY4OTc3ODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hymnal book"
+    },
+    {
+      "id": "generic-product",
+      "description": "Generic product image",
+      "imageUrl": "https://images.unsplash.com/photo-1730794545099-14902983739d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwcm9kdWN0JTIwcGxhY2Vob2xkZXJ8ZW58MHx8fHwxNzY2ODk3NzgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "product placeholder"
+    }
+  ]
 }
