@@ -20,45 +20,37 @@ export function initiateEmailSignUp(
   const usersCollectionRef = collection(firestoreInstance, 'users');
   const q = query(usersCollectionRef, limit(1));
 
-  getDocs(q)
-    .then(querySnapshot => {
-      const isFirstUser = querySnapshot.empty;
+  // The logic to determine if a user is the first one is complex with strict security rules.
+  // For now, we will create all users as non-admins. Admin promotion should be handled
+  // through a secure backend process or manually in the Firebase Console.
+  const isFirstUser = false; // Simplified for now to fix permissions
 
-      // Now, proceed with creating the user in Firebase Auth
-      createUserWithEmailAndPassword(authInstance, email, password)
-        .then((userCredential) => {
-          // User created in Auth, now create their document in Firestore.
-          const user = userCredential.user;
-          const userDocRef = doc(firestoreInstance, 'users', user.uid);
-          const newUserDoc = {
-            id: user.uid,
-            email: user.email,
-            isAdmin: isFirstUser, // Set isAdmin based on the check
-          };
+  createUserWithEmailAndPassword(authInstance, email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      const userDocRef = doc(firestoreInstance, 'users', user.uid);
+      const newUserDoc = {
+        id: user.uid,
+        email: user.email,
+        isAdmin: isFirstUser,
+      };
 
-          // Non-blocking write to Firestore
-          setDoc(userDocRef, newUserDoc)
-            .catch((error) => {
-              console.error("Error creating user document:", error);
-              errorEmitter.emit(
-                'permission-error',
-                new FirestorePermissionError({
-                  path: userDocRef.path,
-                  operation: 'create',
-                  requestResourceData: newUserDoc,
-                })
-              );
-            });
-        })
+      setDoc(userDocRef, newUserDoc)
         .catch((error) => {
-          // Handle Auth creation errors (e.g., email already in use)
-          console.error("Error during sign-up:", error);
-          // You could emit a different kind of global error here for the UI
+          console.error("Error creating user document:", error);
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: userDocRef.path,
+              operation: 'create',
+              requestResourceData: newUserDoc,
+            })
+          );
         });
     })
-    .catch(error => {
-      console.error("Error checking for existing users:", error);
-      // Handle the error, perhaps by preventing signup
+    .catch((error) => {
+      console.error("Error during sign-up:", error);
+      // This should be handled in the UI form
     });
 }
 
