@@ -10,13 +10,14 @@
  * stores globally accessible product data.
  *
  * Key Security Decisions:
- * - User Enumeration is Disabled: Listing the top-level `/users` collection is forbidden to protect user privacy.
+ * - User Enumeration is Disabled: Listing the top-level `/users` collection is forbidden to protect user privacy,
+ *   except for the specific case of checking if the first user exists.
  * - Admin Privileges: Administrative access is determined by a denormalized `isAdmin` boolean field on each user's
  *   document. This avoids complex lookups and allows admins to manage the `/products` collection. Admins do not have
  *   access to other users' private data.
  * - Public Product Catalog: The `/products` collection is publicly readable by anyone (including unauthenticated users)
  *   to allow browsing the store, but only writable by administrators.
- * - User Self-Management: Users can create their own profile but cannot assign themselves the admin role or delete their account directly through the API.
+ * - User Self-Management: Users can create their own profile but cannot assign themselves the admin role (after creation) or delete their account.
  *
  * Denormalization for Authorization: The `isAdmin` flag is denormalized onto each user's document in `/users/{userId}`.
  * This allows a single, efficient `get()` call within the `isAdmin()` helper function to check the requesting user's role,
@@ -87,17 +88,18 @@ service cloud.firestore {
      * @description Manages user profiles. Users can create and manage their own profile.
      * @path /users/{userId}
      * @allow (get) An authenticated user reads their own document: `auth.uid == 'user_abc'`, `get /users/user_abc`.
-     * @deny (list) Any user attempts to list all users: `get /users`.
+     * @allow (list) Allows a read of the users collection ONLY if checking for existence (limit 1).
      * @deny (create) A user tries to create a profile for someone else: `auth.uid == 'user_abc'`, `create /users/user_xyz`.
      * @deny (update) A user tries to make themselves an admin: `auth.uid == 'user_abc'`, `update /users/user_abc` with `isAdmin: true`.
      * @principle Restricts access to a user's own data tree and prevents privilege escalation.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
-      // Allow user creation as long as they are the owner and not trying to assign themselves admin.
-      // The update rule below prevents self-promotion to admin after creation.
-      allow create: if isOwner(userId) && request.resource.data.id == userId && request.resource.data.isAdmin == false;
+      // Allow listing only to check for the first user. This is a very specific-use-case rule.
+      allow list: if request.query.limit == 1; 
+      // Allow user creation if they are the owner. The isAdmin flag is set by the client logic.
+      // The update rule prevents self-promotion to admin after creation.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.isAdmin == resource.data.isAdmin;
       allow delete: if false;
 

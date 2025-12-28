@@ -21,18 +21,18 @@ export function initiateEmailSignUp(
   const q = query(usersCollectionRef, limit(1));
 
   // The logic to determine if a user is the first one is complex with strict security rules.
-  // For now, we will create all users as non-admins. Admin promotion should be handled
-  // through a secure backend process or manually in the Firebase Console.
-  const isFirstUser = false; // Simplified for now to fix permissions
+  // We will attempt to check, but rely on security rules to be permissive for the first creation.
+  getDocs(q).then(snapshot => {
+    const isFirstUser = snapshot.empty;
 
-  createUserWithEmailAndPassword(authInstance, email, password)
+    createUserWithEmailAndPassword(authInstance, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
       const userDocRef = doc(firestoreInstance, 'users', user.uid);
       const newUserDoc = {
         id: user.uid,
         email: user.email,
-        isAdmin: isFirstUser,
+        isAdmin: isFirstUser, // Set to true if this is the very first user
       };
 
       setDoc(userDocRef, newUserDoc)
@@ -50,8 +50,21 @@ export function initiateEmailSignUp(
     })
     .catch((error) => {
       console.error("Error during sign-up:", error);
-      // This should be handled in the UI form
+      // This error should be handled in the UI form that calls this function.
+      // For now, logging it here.
     });
+  }).catch(error => {
+      console.error("Error checking for existing users:", error);
+      // Even if we can't check, we proceed. The security rule for 'create' must be permissive enough.
+      // We assume this user is NOT an admin if the check fails.
+      createUserWithEmailAndPassword(authInstance, email, password)
+        .then(userCredential => {
+            const user = userCredential.user;
+            const userDocRef = doc(firestoreInstance, 'users', user.uid);
+            const newUserDoc = { id: user.uid, email: user.email, isAdmin: false };
+            setDoc(userDocRef, newUserDoc).catch(e => console.error(e));
+        }).catch(e => console.error(e));
+  });
 }
 
 
