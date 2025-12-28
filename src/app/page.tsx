@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store-context';
 import { CATEGORIES } from '@/lib/initial-data';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,11 @@ export default function ShopView() {
   const { products, storeConfig } = useStore();
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = activeCategory === "Todos" || product.category === activeCategory;
@@ -22,7 +27,7 @@ export default function ShopView() {
   return (
     <div className="pb-24">
       <div className="bg-primary text-white p-6 mb-6 rounded-b-3xl shadow-lg">
-        <h1 className="text-2xl font-headline font-bold mb-2">Bem-vindo(a) à {storeConfig.name}</h1>
+        <h1 className="text-2xl font-headline font-bold mb-2">Bem-vindo(a) à {isClient ? storeConfig.name : '...'}</h1>
         <p className="text-primary-foreground/80 text-sm mb-4">Literatura que edifica sua vida.</p>
         
         <div className="relative">
