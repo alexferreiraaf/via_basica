@@ -3,6 +3,7 @@ import './globals.css';
 import { StoreProvider } from '@/lib/store-context';
 import { Header } from '@/components/header';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Gospel Viva Store',
@@ -22,15 +23,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="h-full font-body antialiased bg-background">
-        <StoreProvider>
-          <div className="min-h-screen">
-            <Header />
-            <main className="max-w-4xl mx-auto min-h-[calc(100vh-64px)]">
-              {children}
-            </main>
-          </div>
-          <Toaster />
-        </StoreProvider>
+        <FirebaseClientProvider>
+          <StoreProvider>
+            <div className="min-h-screen">
+              <Header />
+              <main className="max-w-4xl mx-auto min-h-[calc(100vh-64px)]">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+          </StoreProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

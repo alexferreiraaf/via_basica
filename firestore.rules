@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a dual security model. First, a strict user-ownership model for all personal
  * data (profiles, orders, favorites), ensuring users can only access their own information. Second, a role-based

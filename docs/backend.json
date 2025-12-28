@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -8,7 +9,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the User entity."
+          "description": "Unique identifier for the User entity. Matches Firebase Auth UID."
         },
         "email": {
           "type": "string",
@@ -31,8 +32,6 @@
       "required": [
         "id",
         "email",
-        "firstName",
-        "lastName",
         "isAdmin"
       ]
     },
