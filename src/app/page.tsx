@@ -21,15 +21,15 @@ export default function ShopView() {
 
   return (
     <div className="pb-24">
-      <div className="bg-gradient-to-r from-primary to-blue-800 text-white p-6 mb-6 rounded-b-3xl shadow-lg">
+      <div className="bg-primary text-white p-6 mb-6 rounded-b-3xl shadow-lg">
         <h1 className="text-2xl font-headline font-bold mb-2">Bem-vindo(a) à {storeConfig.name}</h1>
-        <p className="text-blue-100 text-sm mb-4">Literatura que edifica sua vida.</p>
+        <p className="text-primary-foreground/80 text-sm mb-4">Literatura que edifica sua vida.</p>
         
         <div className="relative">
           <Input 
             type="text" 
             placeholder="Buscar livros, bíblias..." 
-            className="w-full p-3 pl-10 h-12 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-inner"
+            className="w-full p-3 pl-10 h-12 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

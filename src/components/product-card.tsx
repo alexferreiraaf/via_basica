@@ -39,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </span>
         <Button 
           onClick={() => addToCart(product)}
-          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-purple-200 shadow-lg"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg"
         >
           <Plus size={18} />
           <span className="text-sm font-medium">Adicionar</span>

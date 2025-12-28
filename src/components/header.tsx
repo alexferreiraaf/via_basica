@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store-context';
 import { Button } from './ui/button';
-import { BookOpen, ShoppingBag, Settings } from 'lucide-react';
+import { ShoppingBag, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Logo } from './logo';
 
 export function Header() {
   const { cartCount, storeConfig } = useStore();
@@ -15,8 +16,8 @@ export function Header() {
     <header className="bg-card sticky top-0 z-30 shadow-sm border-b border-gray-100">
       <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 cursor-pointer">
-          <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-            <BookOpen size={20} />
+          <div className="bg-primary text-primary-foreground p-1 rounded-lg flex items-center justify-center h-10 w-10">
+            <Logo className="w-8 h-8" />
           </div>
           <span className="font-headline font-bold text-lg text-primary hidden sm:block">{storeConfig.name}</span>
         </Link>
@@ -38,7 +39,7 @@ export function Header() {
 
           <Button
             variant="ghost"
-            className="relative p-2 bg-background hover:bg-blue-100 text-primary rounded-xl transition-colors"
+            className="relative p-2 bg-background hover:bg-red-100/50 text-primary rounded-xl transition-colors"
             asChild
           >
             <Link href="/cart">
