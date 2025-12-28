@@ -8,7 +8,7 @@ import { ShoppingBag, Settings, User as UserIcon, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { useEffect, useState } from 'react';
-import { useUser, useAuth, useDoc, useFirestore } from '@/firebase';
+import { useUser, useAuth, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import {
   DropdownMenu,
@@ -36,7 +36,7 @@ export function Header() {
   const firestore = useFirestore();
   const router = useRouter();
 
-  const userDocRef = user ? doc(firestore, `users/${user.uid}`) : null;
+  const userDocRef = useMemoFirebase(() => (user && firestore ? doc(firestore, `users/${user.uid}`) : null), [user, firestore]);
   const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
