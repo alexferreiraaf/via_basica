@@ -9,6 +9,7 @@ const APP_NAME = "Via Básica";
 const APP_DESCRIPTION = "Literatura que edifica sua vida.";
 
 export const metadata: Metadata = {
+  applicationName: APP_NAME,
   title: APP_NAME,
   description: APP_DESCRIPTION,
   manifest: "/manifest.json",
@@ -19,6 +20,10 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+  },
+  icons: {
+    shortcut: "/favicon.ico",
+    apple: "/icons/icon-192x192.png",
   },
 };
 
