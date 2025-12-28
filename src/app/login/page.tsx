@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -15,12 +15,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, LogIn } from 'lucide-react';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import {
   initiateEmailSignIn,
   initiateEmailSignUp,
-} from '@/firebase/non-blocking-login';
-import { useState } from 'react';
+} from '@/firebase/auth/email-password';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   email: z.string().email('Email inválido.'),
@@ -34,6 +35,10 @@ type UserFormValue = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const auth = useAuth();
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const router = useRouter();
+
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,6 +46,12 @@ export default function LoginPage() {
       password: '',
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const handleSignIn = (data: UserFormValue) => {
     setIsSubmitting(true);
@@ -52,7 +63,7 @@ export default function LoginPage() {
 
   const handleSignUp = (data: UserFormValue) => {
     setIsSubmitting(true);
-    initiateEmailSignUp(auth, data.email, data.password);
+    initiateEmailSignUp(auth, firestore, data.email, data.password);
     setTimeout(() => setIsSubmitting(false), 5000);
   };
 
@@ -68,7 +79,7 @@ export default function LoginPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <FormProvider {...form}>
+          <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSignIn)} className="space-y-4">
               <FormField
                 control={form.control}
@@ -123,7 +134,7 @@ export default function LoginPage() {
                 </Button>
               </div>
             </form>
-          </FormProvider>
+          </Form>
         </CardContent>
       </Card>
     </div>

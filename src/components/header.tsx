@@ -1,22 +1,58 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store-context';
 import { Button } from './ui/button';
-import { ShoppingBag, Settings } from 'lucide-react';
+import { ShoppingBag, Settings, User as UserIcon, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { useEffect, useState } from 'react';
+import { useUser, useAuth, useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { signOut } from 'firebase/auth';
+
+type UserProfile = {
+  isAdmin?: boolean;
+  firstName?: string;
+  email?: string;
+};
 
 export function Header() {
   const { cartCount, storeConfig } = useStore();
   const pathname = usePathname();
   const [isClient, setIsClient] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const router = useRouter();
+
+  const userDocRef = user ? doc(firestore, `users/${user.uid}`) : null;
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
+  const getInitials = (email: string | null | undefined) => {
+    return email ? email.charAt(0).toUpperCase() : 'U';
+  };
+  
+  const showAdminButton = user && userProfile?.isAdmin && pathname !== '/admin';
 
 
   return (
@@ -30,7 +66,7 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-4">
-           {pathname !== '/admin' && (
+           {showAdminButton && (
             <Button
               variant="ghost"
               size="sm"
@@ -43,6 +79,45 @@ export function Header() {
               </Link>
             </Button>
            )}
+
+            {!isUserLoading && (
+                <>
+                {user ? (
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                        <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.photoURL ?? ''} alt="User avatar" />
+                            <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                        </Avatar>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                        <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{userProfile?.firstName || 'Usuário'}</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                            </p>
+                        </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sair</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : (
+                    <Button asChild variant="ghost" size="sm">
+                        <Link href="/login">
+                            <UserIcon size={16} /> Entrar
+                        </Link>
+                    </Button>
+                )}
+                </>
+            )}
+
 
           <Button
             variant="ghost"
